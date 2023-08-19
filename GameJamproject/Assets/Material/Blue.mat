@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties: _SmoothnessTextureChannel
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -78,6 +78,6 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.19624424, g: 0.5517958, b: 0.9245283, a: 1}
+    - _Color: {r: 0.05900679, g: 0.33049673, b: 0.9622642, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
