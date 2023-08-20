@@ -1,7 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using UnityEngine.Windows;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -22,11 +20,21 @@ public class PlayerMovement : MonoBehaviour
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space; //Controls the keybinding for jump
     public KeyCode sprintKey = KeyCode.LeftShift; // Controsl the keybinding for sprint 
+    public KeyCode crouchKey = KeyCode.LeftControl; // Controls the keybinding for crouching
+
+    [Header("Crouching")]
+    public float crouchSpeed; //Movement speed when crouching
+    public float crouchYScale; //how far player crouchs 
+    private float startYScale; //The starting player height
 
     [Header("Ground Check")]
     public float playerHeight; // Public float that controls player height
     public LayerMask whatIsGround; // Public LayerMask, that will recognize objects that contain layer: whatisGround
     bool grounded; // Bool that determines if player is on the ground by true and false
+
+    [Header("Slope handling")]
+    public float maxSlopeAngle;
+    private RaycastHit slopeHit;
 
     public Transform orientation; //Controls player orientation
 
@@ -42,6 +50,7 @@ public class PlayerMovement : MonoBehaviour
     {
         walking,
         sprinting,
+        crouching,
         air
     }
 
@@ -51,6 +60,8 @@ public class PlayerMovement : MonoBehaviour
         rb.freezeRotation = true;
 
         readyToJump = true; // The default state for readytojump is true, meaning that on start the player can jump
+
+        startYScale = transform.localScale.y;
     }
 
     private void Update() // Update every frame
@@ -76,11 +87,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void MyInput()
     {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
+        horizontalInput = UnityEngine.Input.GetAxisRaw("Horizontal");
+        verticalInput = UnityEngine.Input.GetAxisRaw("Vertical");
 
         // when to jump
-        if (Input.GetKey(jumpKey) && readyToJump && grounded)
+        if (UnityEngine.Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
 
@@ -88,26 +99,48 @@ public class PlayerMovement : MonoBehaviour
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
+
+//-----------------------------------------------------------------------------------------------
+
+        // Start crouch
+        if (UnityEngine.Input.GetKeyDown(crouchKey))
+        {
+            transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+        }   
+
+        // Stop crouch
+        if (UnityEngine.Input.GetKeyUp(crouchKey))
+        {
+            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+        }
+//-----------------------------------------------------------------------------------------------
     }
 
     private void StateHandler()
     {
+        //Mode - Crouching
+        if (UnityEngine.Input.GetKey(crouchKey))
+        {
+            state = MovementState.crouching;
+            moveSpeed = crouchSpeed;
+        }
+
         // Mode - Sprinting
-        if(grounded && Input.GetKey(sprintKey)) //if the sprint key is being pressed, set the state of the player to sprinting and set the move speed to the set sprint speed
+        else if (grounded && UnityEngine.Input.GetKey(sprintKey)) //if the sprint key is being pressed, set the state of the player to sprinting and set the move speed to the set sprint speed
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
-        }   
+        }
 
         //Mode - Walking     
-        else if(grounded) //If the sprint key is not being held set the player statee to walking and set the movement speed to the set walk speed
+        else if (grounded) //If the sprint key is not being held set the player statee to walking and set the movement speed to the set walk speed
         {
             state = MovementState.walking;
             moveSpeed = walkSpeed;
         }
 
         //Mode - Air
-
         else
         {
             state = MovementState.air;
@@ -119,6 +152,12 @@ public class PlayerMovement : MonoBehaviour
         // calculate movement direction
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
+        // On slope 
+        if(onSlope())
+        {
+            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
+        }
+
         // on ground
         if (grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
@@ -126,6 +165,9 @@ public class PlayerMovement : MonoBehaviour
         // in air
         else if (!grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+        // Turn gravity off while on slope
+        rb.useGravity = !onSlope();
     }
 
     private void SpeedControl()
@@ -150,5 +192,21 @@ public class PlayerMovement : MonoBehaviour
     private void ResetJump()
     {
         readyToJump = true;
+    }
+
+    private bool onSlope()
+    {
+        if(Physics.Raycast(transform.position, Vector3.down, out slopeHit,playerHeight * 0.5f + 0.3f))
+        {
+            float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
+            return angle < maxSlopeAngle && angle != 0;
+        }
+
+        return false;
+    }
+
+    private Vector3 GetSlopeMoveDirection()
+    {
+        return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
     }
 }

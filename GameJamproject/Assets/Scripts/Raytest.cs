@@ -8,11 +8,7 @@ public class Raytest : MonoBehaviour
     public Vector3 collision = Vector3.zero;
     public LayerMask layer;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+
 
     // Update is called once per frame
     void Update()
