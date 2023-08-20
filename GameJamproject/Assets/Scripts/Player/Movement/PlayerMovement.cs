@@ -1,7 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using UnityEngine.Windows;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -22,6 +20,12 @@ public class PlayerMovement : MonoBehaviour
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space; //Controls the keybinding for jump
     public KeyCode sprintKey = KeyCode.LeftShift; // Controsl the keybinding for sprint 
+    public KeyCode crouchKey = KeyCode.LeftControl; // Controls the keybinding for crouching
+
+    [Header("Crouching")]
+    public float crouchSpeed; //Movement speed when crouching
+    public float crouchYScale; //how far player crouchs 
+    private float startYScale; //The starting player height
 
     [Header("Ground Check")]
     public float playerHeight; // Public float that controls player height
@@ -51,6 +55,8 @@ public class PlayerMovement : MonoBehaviour
         rb.freezeRotation = true;
 
         readyToJump = true; // The default state for readytojump is true, meaning that on start the player can jump
+
+        startYScale = transform.localScale.y;
     }
 
     private void Update() // Update every frame
@@ -76,11 +82,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void MyInput()
     {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
+        horizontalInput = UnityEngine.Input.GetAxisRaw("Horizontal");
+        verticalInput = UnityEngine.Input.GetAxisRaw("Vertical");
 
         // when to jump
-        if (Input.GetKey(jumpKey) && readyToJump && grounded)
+        if (UnityEngine.Input.GetKey(jumpKey) && readyToJump && grounded)
         {
             readyToJump = false;
 
@@ -88,19 +94,25 @@ public class PlayerMovement : MonoBehaviour
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
+
+        // Start crouch
+        if (UnityEngine.Input.GetKeyDown(crouchKey))
+        {
+
+        }
     }
 
     private void StateHandler()
     {
         // Mode - Sprinting
-        if(grounded && Input.GetKey(sprintKey)) //if the sprint key is being pressed, set the state of the player to sprinting and set the move speed to the set sprint speed
+        if (grounded && UnityEngine.Input.GetKey(sprintKey)) //if the sprint key is being pressed, set the state of the player to sprinting and set the move speed to the set sprint speed
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
-        }   
+        }
 
         //Mode - Walking     
-        else if(grounded) //If the sprint key is not being held set the player statee to walking and set the movement speed to the set walk speed
+        else if (grounded) //If the sprint key is not being held set the player statee to walking and set the movement speed to the set walk speed
         {
             state = MovementState.walking;
             moveSpeed = walkSpeed;
