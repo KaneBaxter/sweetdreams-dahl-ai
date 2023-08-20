@@ -46,6 +46,7 @@ public class PlayerMovement : MonoBehaviour
     {
         walking,
         sprinting,
+        crouching,
         air
     }
 
@@ -98,12 +99,26 @@ public class PlayerMovement : MonoBehaviour
         // Start crouch
         if (UnityEngine.Input.GetKeyDown(crouchKey))
         {
+            transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+        }   
 
+        // Stop crouch
+        if (UnityEngine.Input.GetKeyUp(crouchKey))
+        {
+            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
         }
     }
 
     private void StateHandler()
     {
+        //Mode - Crouching
+        if (UnityEngine.Input.GetKey(crouchKey))
+        {
+            state = MovementState.crouching;
+            moveSpeed = crouchSpeed;
+        }
+
         // Mode - Sprinting
         if (grounded && UnityEngine.Input.GetKey(sprintKey)) //if the sprint key is being pressed, set the state of the player to sprinting and set the move speed to the set sprint speed
         {
@@ -119,7 +134,6 @@ public class PlayerMovement : MonoBehaviour
         }
 
         //Mode - Air
-
         else
         {
             state = MovementState.air;
