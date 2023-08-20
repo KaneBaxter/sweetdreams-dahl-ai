@@ -32,6 +32,10 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask whatIsGround; // Public LayerMask, that will recognize objects that contain layer: whatisGround
     bool grounded; // Bool that determines if player is on the ground by true and false
 
+    [Header("Slope handling")]
+    public float maxSlopeAngle;
+    private RaycastHit slopeHit;
+
     public Transform orientation; //Controls player orientation
 
     float horizontalInput; // Horizontal sensitivity
@@ -148,6 +152,12 @@ public class PlayerMovement : MonoBehaviour
         // calculate movement direction
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
+        // On slope 
+        if(onSlope())
+        {
+            rb.AddForce(GetSlopeMoveDirection() * moveSpeed * 20f, ForceMode.Force);
+        }
+
         // on ground
         if (grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
@@ -155,6 +165,9 @@ public class PlayerMovement : MonoBehaviour
         // in air
         else if (!grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+
+        // Turn gravity off while on slope
+        rb.useGravity = !onSlope();
     }
 
     private void SpeedControl()
@@ -179,5 +192,21 @@ public class PlayerMovement : MonoBehaviour
     private void ResetJump()
     {
         readyToJump = true;
+    }
+
+    private bool onSlope()
+    {
+        if(Physics.Raycast(transform.position, Vector3.down, out slopeHit,playerHeight * 0.5f + 0.3f))
+        {
+            float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
+            return angle < maxSlopeAngle && angle != 0;
+        }
+
+        return false;
+    }
+
+    private Vector3 GetSlopeMoveDirection()
+    {
+        return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
     }
 }
