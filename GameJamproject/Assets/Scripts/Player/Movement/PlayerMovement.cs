@@ -96,6 +96,8 @@ public class PlayerMovement : MonoBehaviour
             Invoke(nameof(ResetJump), jumpCooldown);
         }
 
+//-----------------------------------------------------------------------------------------------
+
         // Start crouch
         if (UnityEngine.Input.GetKeyDown(crouchKey))
         {
@@ -108,6 +110,7 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
         }
+//-----------------------------------------------------------------------------------------------
     }
 
     private void StateHandler()
@@ -120,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Mode - Sprinting
-        if (grounded && UnityEngine.Input.GetKey(sprintKey)) //if the sprint key is being pressed, set the state of the player to sprinting and set the move speed to the set sprint speed
+        else if (grounded && UnityEngine.Input.GetKey(sprintKey)) //if the sprint key is being pressed, set the state of the player to sprinting and set the move speed to the set sprint speed
         {
             state = MovementState.sprinting;
             moveSpeed = sprintSpeed;
